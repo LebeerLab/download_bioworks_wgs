@@ -1,9 +1,8 @@
-import sys
 import wget
-import time
+import glob
+import argparse
 import urllib.request
 from urllib.request import urlopen as request
-import glob
 from bs4 import BeautifulSoup, SoupStrainer
 
 from selenium import webdriver
@@ -25,7 +24,12 @@ def headless_visitor(url):
 def build_link_filter(soup):
     results = soup.find_all(lambda tag: tag.name == "a" and "href" in tag.attrs and "class" in tag.attrs)
     classes = list(set([ " ".join(r.attrs["class"]) for r in results if "dig-Link" in r.attrs["class"]]))
-    print("Is this your class? " + classes[0])
+    try:
+        print("Is this your class? " + classes[0])
+    
+    except IndexError:
+        print("No links found :(")
+        exit(0)
     return SoupStrainer("a", attrs={"class" : classes[0]})
 
 
@@ -38,6 +42,19 @@ def download_links(links):
 
 
 def main(url=None):
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "url",
+        nargs="?",
+        type=str,
+        default=None,
+        help="Optional url"
+    )
+    args = parser.parse_args()
+
+    if not url:
+        url = args.url
 
     if not url:
         url = input("Url to reads: ")
