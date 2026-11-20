@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "download_bioworks_wgs"
+version = "0.0.1"
+description = "Downloading reads from a bioworks url"
+requires-python = ">=3.10"
+dynamic = ["dependencies"]
+
+[project.scripts]
+download_bioworks_wgs = "download_bioworks_wgs:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
