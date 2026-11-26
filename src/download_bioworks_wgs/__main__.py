@@ -1,3 +1,4 @@
+import os
 import wget
 import glob
 import argparse
@@ -36,7 +37,11 @@ def build_link_filter(soup):
 def download_links(links):
 
     for l in set(links):
+
         fname = l.split("?")[0].split("/")[-1]
+        if os.path.exists(fname):
+            print(f"Skipping download of {fname}, as it already exists...")
+            continue
         print(f"Downloading {fname} from {l}")
         wget.download(l, fname)
 
@@ -66,8 +71,9 @@ def main(url=None):
     second_supper = BeautifulSoup(html, 'html.parser', parse_only=only_links)
     links = [a.attrs["href"].replace("&dl=0","&dl=1") for a in second_supper if a.attrs["href"]]
 
+    print(links)
+
     if len(links) < 10:
-        print(links)
         raise Exception(f"I don\'t think these are your samples, bud...\nI got: {' '.join(links)}")
     else:
         download_links(links)
