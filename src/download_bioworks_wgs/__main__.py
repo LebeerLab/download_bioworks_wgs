@@ -1,5 +1,7 @@
 import os
+import argparse
 from dotenv import dotenv_values
+from tqdm import tqdm
 import dropbox
 from dropbox import DropboxOAuth2FlowNoRedirect
 
@@ -43,19 +45,25 @@ def download_reads_from_dropbox(url):
         while result.has_more:	
             result = dbx.files_list_folder_continue(result.cursor)
             entries.extend(result.entries)
-        
 
         for entry in [e for e in entries if ".gz" in e.name]:
-            #print(dir(entry))
+            print(entry.name)
             if os.path.exists(entry.name):
                 print(f"File {entry.name} already downloaded")
                 continue
-            with stopwatch('download'):
-                dbx.sharing_get_shared_link_file_to_file(
-                    download_path="./" + entry.name,
+            metadata, response = dbx.sharing_get_shared_link_file(
                     url=url,
                     path="/" + entry.name
-                )
+            )
+            total = int(response.headers.get("Content-Length", 0))
+            with open(entry.name, "wb") as f:
+                with tqdm(total=total, unit="B", unit_scale=True, desc=entry.name) as pbar:
+                    for chunk in response.iter_content(chunk_size=1024 * 1024):
+                        if chunk:
+                            f.write(chunk)
+                            pbar.update(len(chunk))
+            response.close()
+
 
 def main(url=None):
 
