@@ -47,7 +47,7 @@ def download_reads_from_dropbox(url):
             entries.extend(result.entries)
 
         for entry in [e for e in entries if ".gz" in e.name]:
-            print(entry.name)
+            #print(entry.name)
             if os.path.exists(entry.name):
                 print(f"File {entry.name} already downloaded")
                 continue
