@@ -102,8 +102,14 @@ def main(url=None):
 
     if not url:
         url = input("Url to reads: ")
+    tries = 1
+    while True:
+        try:
+            download_reads_from_dropbox(url, args.config)
+        except Exception as e:
+            print(f"Failure {n}: {e}")
+        return None
     
-    download_reads_from_dropbox(url, args.config)
 
 
 if __name__ == "__main__":
