@@ -1,17 +1,22 @@
 import os
 import argparse
-from dotenv import dotenv_values
+from dotenv import dotenv_values, set_key
 from tqdm import tqdm
 import dropbox
 from dropbox import DropboxOAuth2FlowNoRedirect
+from http.client import RemoteDisconnected
 
-def oath_flow(config_f="/home/tim/.dropbox"):
+def oath_flow(config_f):
     config = dotenv_values(config_f)
-    try:
-        key, secret = (config["DROPBOX_KEY"], config["DROPBOX_SECRET"])
-    except(KeyError):
+    key, secret = (config.get("DROPBOX_KEY"), config.get("DROPBOX_SECRET"))
+    if not key:
         raise ValueError(f"Please set DROPBOX_KEY and DROPBOX_SECRET in {config_f}")
-    auth_flow = DropboxOAuth2FlowNoRedirect(key, secret)
+    auth_flow = DropboxOAuth2FlowNoRedirect(
+      key, 
+      consumer_secret=secret, 
+      token_access_type="offline", 
+      use_pkce=True
+    )
 
     authorize_url = auth_flow.start()
     print("1. Go to: " + authorize_url)
@@ -24,14 +29,21 @@ def oath_flow(config_f="/home/tim/.dropbox"):
     except Exception as e:
         print('Error: %s' % (e,))
         exit(1)
-    return oauth_result.access_token
+
+    set_key(config_f, "DROPBOX_REFRESH_TOKEN", oauth_result.refresh_token)
+
+    return oauth_result.refresh_token
 
 
-def download_reads_from_dropbox(url):
+def download_reads_from_dropbox(url, config_f):
 
-    access_token = oath_flow()
 
-    with dropbox.Dropbox(oauth2_access_token = access_token) as dbx:
+    config = dotenv_values(config_f)
+    refresh_token, key = (config.get("DROPBOX_REFRESH_TOKEN"), config.get("DROPBOX_KEY"))
+    if not refresh_token:
+        refresh_token = oath_flow(config_f)
+
+    with dropbox.Dropbox(oauth2_refresh_token = refresh_token, app_key=key) as dbx:
 
         shared_link = dropbox.files.SharedLink(url=url)
 
@@ -79,6 +91,10 @@ def main(url=None):
     parser.add_argument(
         "-d","--debug", action="store_true"
     )
+    parser.add_argument(
+        "-c", "--config", default="/home/tim/.dropbox"
+    )
+
     args = parser.parse_args()
 
     if not url:
@@ -87,7 +103,7 @@ def main(url=None):
     if not url:
         url = input("Url to reads: ")
     
-    download_reads_from_dropbox(url)
+    download_reads_from_dropbox(url, args.config)
 
 
 if __name__ == "__main__":

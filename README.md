@@ -4,8 +4,8 @@
 
 ## Dependencies
 
-You'll need the google-chrome package in the current state of the script. [Instructions on how to install can be found here](https://github.com/password123456/setup-selenium-with-chrome-driver-on-ubuntu_debian)
+You'll need the dropbox python package and set up a Dropbox API app (with key and secret) in a config file. An example can be found in `.dropbox.example`
 
 # Usage
 
-`download_bioworks_wgs` will prompt you to paste a url to the sample page in the dropbox; that's it!
+`download_bioworks_wgs -c <config_file>` will prompt you to paste a url to the sample page in the dropbox; responds with a link that you need to follow to authorize access.
